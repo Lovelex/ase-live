@@ -1,6 +1,6 @@
 {
   "name": "ase-live",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Arquivos do Aseprite direto no jogo: salvou no Aseprite, o jogo no navegador atualiza (plugin do Vite).",
   "license": "MIT",
   "type": "module",
@@ -33,7 +33,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "lint": "eslint .",
-    "check": "npm run typecheck && npm run lint && npm run test",
+    "check": "npm run typecheck && npm run lint && npm run build && npm run test",
     "fixtures": "aseprite -b --script tools/fixtures.lua && node tools/composite-groups.mjs && aseprite -b --script tools/references.lua",
     "prepare": "npm run build",
     "example": "npm run build && vite example --port 5199"

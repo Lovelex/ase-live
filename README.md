@@ -11,12 +11,13 @@ Arquivos do Aseprite direto no jogo. Você salva no Aseprite e o jogo aberto no 
 1. [Para que serve](#para-que-serve)
 2. [Instalação](#instalação)
 3. [Usando no jogo](#usando-no-jogo)
-4. [Como organizar o arquivo no Aseprite](#como-organizar-o-arquivo-no-aseprite)
-5. [Referência](#referência)
-6. [Erros e avisos](#erros-e-avisos)
-7. [Limitações](#limitações)
-8. [Desenvolvimento do pacote](#desenvolvimento-do-pacote)
-9. [Licença](#licença)
+4. [Galeria](#galeria)
+5. [Como organizar o arquivo no Aseprite](#como-organizar-o-arquivo-no-aseprite)
+6. [Referência](#referência)
+7. [Erros e avisos](#erros-e-avisos)
+8. [Limitações](#limitações)
+9. [Desenvolvimento do pacote](#desenvolvimento-do-pacote)
+10. [Licença](#licença)
 
 ---
 
@@ -163,6 +164,24 @@ function carregar(scene: Phaser.Scene, nome: string): Promise<void> {
 // na cena:
 watchSprites(() => carregar(this, 'heroi'));
 ```
+
+---
+
+## Galeria
+
+Com o `vite dev` rodando, abra **`http://localhost:5173/__ase-live/`** (troque a porta se o seu projeto usa outra; o endereço aparece no terminal, logo abaixo do endereço do jogo).
+
+A galeria mostra todos os arquivos de `art/` de uma vez:
+
+- **cada animação tocando**, com o nome da tag, a quantidade de quadros, a duração e a direção;
+- **a tira de quadros** de cada animação, numerados como na linha do tempo do Aseprite;
+- **os pontos** das camadas `@`, marcados em cores, quando a opção "pontos" está ligada;
+- **os tilesets**, com todas as peças;
+- **os avisos** de cada arquivo, no topo da página.
+
+No cabeçalho dá para filtrar as animações pelo nome, mudar o zoom e trocar o fundo (escuro, claro ou xadrez). A galeria atualiza sozinha quando você salva no Aseprite, então dá para deixar aberta ao lado do programa enquanto desenha.
+
+Ela só existe durante o desenvolvimento: não vai para o build do jogo.
 
 ---
 

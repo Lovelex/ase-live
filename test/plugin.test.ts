@@ -80,3 +80,49 @@ describe('no vite build', () => {
     }
   });
 });
+
+describe('galeria', () => {
+  let root: string;
+  let server: ViteDevServer;
+  let url: string;
+
+  beforeAll(async () => {
+    root = project();
+    server = await createServer({ root, logLevel: 'silent', configFile: false, plugins: [aseLive()], server: { port: 0, ws: false } });
+    await server.listen();
+    url = server.resolvedUrls!.local[0]!;
+  });
+  afterAll(async () => {
+    await server.close();
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('página aponta para os sprites e para o script', async () => {
+    const res = await fetch(new URL('__ase-live/', url));
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('content="/@id/__x00__ase-live:sprites"');
+    expect(html).toContain('src="/__ase-live/gallery.js"');
+  });
+
+  it('serve os scripts da galeria', async () => {
+    for (const file of ['gallery.js', 'anim.js']) {
+      const res = await fetch(new URL(`__ase-live/${file}`, url));
+      expect(res.status).toBe(200);
+      expect(res.headers.get('content-type')).toMatch(/javascript/);
+    }
+  });
+
+  it('só os arquivos da lista', async () => {
+    for (const file of ['plugin.js', 'index.js', '..%2Fpackage.json', '%2e%2e/package.json', 'x/../../package.json']) {
+      const res = await fetch(new URL(`__ase-live/${file}`, url));
+      expect(res.status, file).toBe(404);
+    }
+  });
+
+  it('o módulo dos sprites responde no endereço da página', async () => {
+    const res = await fetch(new URL('@id/__x00__ase-live:sprites', url));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain('herois/ninja');
+  });
+});

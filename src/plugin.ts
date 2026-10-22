@@ -4,6 +4,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import { buildSprite, type BuiltSprite } from './sheet.js';
@@ -17,6 +18,28 @@ export interface AseLiveOptions {
 const PUBLIC_ID = 'ase-live/sprites';
 const RESOLVED_ID = '\0ase-live:sprites';
 const EXTENSIONS = ['.aseprite', '.ase'];
+
+// Galeria (só no dev): página + os dois scripts compilados, servidos de dist/ como estão.
+const GALLERY_FILES = new Set(['gallery.js', 'gallery.js.map', 'anim.js', 'anim.js.map']);
+const here = path.dirname(fileURLToPath(import.meta.url));
+// rodando de src/ (testes do pacote), os scripts estão em dist/
+const galleryDir = existsSync(path.join(here, 'gallery.js')) ? here : path.join(here, '..', 'dist');
+
+function galleryPage(base: string): string {
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ase-live: galeria</title>
+<meta name="ase-live-sprites" content="${base}@id/__x00__ase-live:sprites">
+</head>
+<body>
+<script type="module" src="${base}__ase-live/gallery.js"></script>
+</body>
+</html>
+`;
+}
 
 const zlib = {
   inflate: (data: Uint8Array) => new Uint8Array(inflateSync(data)),
@@ -103,6 +126,31 @@ export default function aseLive(options: AseLiveOptions = {}): Plugin {
 
     configureServer(devServer) {
       server = devServer;
+      const base = config.base.startsWith('/') ? config.base : '/';
+      devServer.middlewares.use(`${base}__ase-live`, (req, res) => {
+        const file = (req.url ?? '/').split('?')[0]!.replace(/^\/+/, '');
+        if (file === '') {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.end(galleryPage(base));
+          return;
+        }
+        const full = path.join(galleryDir, file);
+        if (!GALLERY_FILES.has(file) || !existsSync(full)) {
+          res.statusCode = 404;
+          res.end('não encontrado');
+          return;
+        }
+        res.setHeader('Content-Type', file.endsWith('.map') ? 'application/json' : 'text/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.end(readFileSync(full));
+      });
+      devServer.httpServer?.once('listening', () => {
+        // depois das URLs do próprio Vite
+        setTimeout(() => {
+          const local = devServer.resolvedUrls?.local[0];
+          if (local) config.logger.info(`  \x1b[32m➜\x1b[0m  Galeria: ${new URL('__ase-live/', local).href}`);
+        }, 50);
+      });
       devServer.watcher.add(dir);
       const onFile = (file: string): void => {
         if (!isArtFile(file, dir)) return;
