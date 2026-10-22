@@ -38,9 +38,14 @@ const DIRECTION_LABEL: Record<Tag['direction'], string> = {
   'pingpong-reverse': 'volta e vai',
 };
 
-/** Texto curto de uma animação: "6 quadros, 83 ms", "1 quadro", "4 quadros, 50 a 200 ms, vai e volta, toca 2x". */
+/**
+ * Texto curto de uma animação, com os quadros numerados como na linha do tempo do Aseprite (a partir de 1):
+ * "quadro 14", "quadros 3 a 8, 83 ms", "quadros 1 a 4, 50 a 200 ms, vai e volta, toca 2x".
+ */
 export function describeEntry(e: GalleryEntry): string {
-  const parts = [e.frames.length === 1 ? '1 quadro' : `${e.frames.length} quadros`];
+  const first = (e.frames[0] ?? 0) + 1;
+  const last = (e.frames[e.frames.length - 1] ?? 0) + 1;
+  const parts = [e.frames.length === 1 ? `quadro ${first}` : `quadros ${first} a ${last}`];
   if (e.frames.length > 1) {
     const min = Math.min(...e.durations);
     const max = Math.max(...e.durations);

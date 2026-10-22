@@ -1,6 +1,6 @@
 {
   "name": "ase-live",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Arquivos do Aseprite direto no jogo: salvou no Aseprite, o jogo no navegador atualiza (plugin do Vite).",
   "license": "MIT",
   "type": "module",

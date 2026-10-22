@@ -173,7 +173,7 @@ Com o `vite dev` rodando, abra **`http://localhost:5173/__ase-live/`** (troque a
 
 A galeria mostra todos os arquivos de `art/` de uma vez:
 
-- **cada animação tocando**, com o nome da tag, a quantidade de quadros, a duração e a direção;
+- **cada animação tocando**, com o nome da tag, os números dos quadros (os mesmos da linha do tempo do Aseprite), a duração e a direção;
 - **a tira de quadros** de cada animação, numerados como na linha do tempo do Aseprite;
 - **os pontos** das camadas `@`, marcados em cores, quando a opção "pontos" está ligada;
 - **os tilesets**, com todas as peças;

@@ -21,9 +21,9 @@ describe('galleryEntries', () => {
 
 describe('describeEntry', () => {
   const entry = (tag: Sprite['tags'][string]) => galleryEntries(sprite({ t: tag }))[0]!;
-  it('textos curtos', () => {
-    expect(describeEntry(entry({ from: 2, to: 2, direction: 'forward', repeat: 0 }))).toBe('1 quadro');
-    expect(describeEntry(entry({ from: 0, to: 1, direction: 'forward', repeat: 0 }))).toBe('2 quadros, 100 ms');
-    expect(describeEntry(entry({ from: 0, to: 2, direction: 'pingpong', repeat: 2 }))).toBe('3 quadros, 100 a 200 ms, vai e volta, toca 2x');
+  it('textos curtos, com os quadros numerados como no Aseprite', () => {
+    expect(describeEntry(entry({ from: 2, to: 2, direction: 'forward', repeat: 0 }))).toBe('quadro 3');
+    expect(describeEntry(entry({ from: 0, to: 1, direction: 'forward', repeat: 0 }))).toBe('quadros 1 a 2, 100 ms');
+    expect(describeEntry(entry({ from: 0, to: 2, direction: 'pingpong', repeat: 2 }))).toBe('quadros 1 a 3, 100 a 200 ms, vai e volta, toca 2x');
   });
 });
