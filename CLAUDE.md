@@ -3,7 +3,10 @@
 Plugin do Vite que lê `.aseprite`/`.ase` de `art/` e entrega ao jogo como
 `import { sprites } from 'ase-live/sprites'`, atualizando ao salvar (sem F5).
 Pacote reaproveitado por todos os jogos do usuário; o primeiro é o Kage Arena
-(`../KageArena`). Convenção para o usuário no README.md.
+(`../KageArena`). Convenção para o usuário no README.md. Público (MIT) em
+github.com/Lovelex/ase-live; os jogos instalam por tag (`github:Lovelex/ase-live#vX.Y.Z`,
+o `prepare` compila o `dist/`). Versão nova = commit + `git tag vX.Y.Z` + push da tag.
+README para o público: português, sem emoji e sem travessão.
 
 ## Estrutura
 - `src/read.ts` — leitor do formato (puro, zlib injetado). Especificação: `~/.local/src/aseprite/docs/ase-file-specs.md`.
