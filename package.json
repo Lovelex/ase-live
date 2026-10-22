@@ -1,0 +1,52 @@
+{
+  "name": "ase-live",
+  "version": "0.1.0",
+  "description": "Arquivos do Aseprite direto no jogo: salvou no Aseprite, o jogo atualiza (plugin do Vite).",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./sprites": {
+      "types": "./dist/sprites.d.ts",
+      "default": "./dist/sprites.js"
+    },
+    "./anim": {
+      "types": "./dist/anim.d.ts",
+      "default": "./dist/anim.js"
+    },
+    "./read": {
+      "types": "./dist/read.d.ts",
+      "default": "./dist/read.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "fixtures": "aseprite -b --script tools/fixtures.lua && node tools/composite-groups.mjs && aseprite -b --script tools/references.lua",
+    "prepare": "npm run build",
+    "example": "npm run build && vite example --port 5199"
+  },
+  "peerDependencies": {
+    "vite": ">=6"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}
