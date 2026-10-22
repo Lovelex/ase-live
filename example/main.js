@@ -14,7 +14,7 @@ watchSprites(async (all) => {
     img.src = sprite.image;
     await img.decode();
     const title = document.createElement('div');
-    title.textContent = `${sprite.name} — tags: ${Object.keys(sprite.tags).join(', ') || '(nenhuma)'}`;
+    title.textContent = `${sprite.name}: tags ${Object.keys(sprite.tags).join(', ') || '(nenhuma)'}`;
     const canvas = document.createElement('canvas');
     canvas.width = sprite.width;
     canvas.height = sprite.height;
@@ -23,7 +23,7 @@ watchSprites(async (all) => {
   }));
   for (const w of warnings) {
     const p = document.createElement('div');
-    p.textContent = `⚠ ${w}`;
+    p.textContent = `aviso: ${w}`;
     list.append(p);
   }
 });

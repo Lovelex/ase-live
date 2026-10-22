@@ -1,12 +1,13 @@
 {
   "name": "ase-live",
   "version": "0.1.0",
-  "description": "Arquivos do Aseprite direto no jogo: salvou no Aseprite, o jogo atualiza (plugin do Vite).",
+  "description": "Arquivos do Aseprite direto no jogo: salvou no Aseprite, o jogo no navegador atualiza (plugin do Vite).",
   "license": "MIT",
   "type": "module",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
@@ -48,5 +49,19 @@
     "typescript-eslint": "8.71.2",
     "vite": "8.3.4",
     "vitest": "5.0.5"
-  }
+  },
+  "author": "Lucas Humberto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lovelex/ase-live.git"
+  },
+  "keywords": [
+    "aseprite",
+    "vite",
+    "vite-plugin",
+    "pixel-art",
+    "gamedev",
+    "sprites",
+    "hot-reload"
+  ]
 }
