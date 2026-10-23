@@ -179,7 +179,9 @@ A galeria mostra todos os arquivos de `art/` de uma vez:
 - **os tilesets**, com todas as peças;
 - **os avisos** de cada arquivo, no topo da página.
 
-No cabeçalho dá para filtrar as animações pelo nome, mudar o zoom e trocar o fundo (escuro, claro ou xadrez). A galeria atualiza sozinha quando você salva no Aseprite, então dá para deixar aberta ao lado do programa enquanto desenha.
+Arquivos de peças ficam numa seção à parte, "Peças", e não tocam. São os arquivos cujo nome termina em `-tiles` (`art/floresta-tiles.aseprite`) ou que estão numa pasta `tiles/` (`art/tiles/floresta.aseprite`). Neles, cada tag é uma peça e cada quadro da tag é uma variante dela: a galeria mostra as variantes paradas, lado a lado, com o número do quadro. As tags são agrupadas pelos pontos do nome: `terra.borda.topo` aparece no grupo "terra", subgrupo "borda", com o nome "topo"; `terra.miolo` aparece no grupo "terra", com o nome "miolo".
+
+No cabeçalho dá para filtrar pelo nome, escolher o que mostrar (tudo, só animações ou só peças), mudar o zoom e trocar o fundo (escuro, claro ou xadrez). A galeria atualiza sozinha quando você salva no Aseprite, então dá para deixar aberta ao lado do programa enquanto desenha.
 
 Ela só existe durante o desenvolvimento: não vai para o build do jogo.
 

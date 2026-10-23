@@ -1,5 +1,6 @@
 // Galeria (só no vite dev): <servidor>/__ase-live/ mostra todos os sprites de art/ com cada animação tocando,
-// os quadros, os pontos e os avisos. Salvou no Aseprite, a galeria atualiza.
+// os quadros, os pontos e os avisos. Salvou no Aseprite, a galeria atualiza. Arquivos de peças (`-tiles` no nome ou
+// na pasta `tiles/`) ficam numa seção à parte: parados, com as variantes lado a lado e as tags agrupadas pelos pontos.
 // Roda no navegador; o plugin serve este arquivo e o anim.js como estão em dist/.
 
 import { frameAt } from './anim.js';
@@ -29,6 +30,39 @@ export function galleryEntries(sprite: Sprite): GalleryEntry[] {
     return [make('(todos os quadros)', null, { from: 0, to: sprite.frames.length - 1, direction: 'forward', repeat: 0 })];
   }
   return tags.map(([name, t]) => make(name, name, t));
+}
+
+/**
+ * Arquivo de peças (tiles com variantes), não de animações: o nome termina em `-tiles` ou ele está numa pasta
+ * `tiles/`. Cada tag é uma peça e cada quadro dela, uma variante.
+ */
+export function isPieceSheet(sprite: Pick<Sprite, 'name'>): boolean {
+  return /(^|\/)tiles\//.test(sprite.name) || /-tiles$/.test(sprite.name);
+}
+
+/** Um grupo de peças: o caminho pelos pontos do nome da tag (`terra.borda.c` → ["terra", "borda"]) e as peças. */
+export interface PieceGroup {
+  path: string[];
+  entries: { label: string; entry: GalleryEntry }[];
+}
+
+/**
+ * Agrupa as tags por até dois pedaços do nome separados por ponto (o último pedaço é sempre o rótulo), na ordem do
+ * arquivo: `terra.borda.c` → grupo terra › borda, rótulo "c"; `terra.miolo` → grupo terra, rótulo "miolo"; sem ponto,
+ * sem grupo.
+ */
+export function pieceGroups(entries: GalleryEntry[]): PieceGroup[] {
+  const groups = new Map<string, PieceGroup>();
+  for (const entry of entries) {
+    const parts = entry.name.split('.');
+    const path = parts.slice(0, Math.min(2, parts.length - 1));
+    const label = parts.slice(path.length).join('.');
+    const key = path.join('.');
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { path, entries: [] }));
+    g.entries.push({ label, entry });
+  }
+  return [...groups.values()];
 }
 
 const DIRECTION_LABEL: Record<Tag['direction'], string> = {
@@ -62,19 +96,22 @@ export function describeEntry(e: GalleryEntry): string {
 const POINT_COLORS = ['#3fd0ff', '#ff4fd8', '#ffd23f', '#7dff6a', '#ff8a3f'];
 const BACKGROUNDS = { escuro: '#24222b', claro: '#e9e6dc', xadrez: 'checker' } as const;
 type Background = keyof typeof BACKGROUNDS;
+const KINDS = { tudo: 'tudo', animações: 'animações', peças: 'peças' } as const;
+type Kind = keyof typeof KINDS;
 
 interface Settings {
   zoom: number;
   background: Background;
   points: boolean;
   frames: boolean;
+  kind: Kind;
   filter: string;
 }
 
 const SETTINGS_KEY = 'ase-live.gallery';
 
 function loadSettings(): Settings {
-  const base: Settings = { zoom: 4, background: 'escuro', points: false, frames: true, filter: '' };
+  const base: Settings = { zoom: 4, background: 'escuro', points: false, frames: true, kind: 'tudo', filter: '' };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
@@ -83,6 +120,7 @@ function loadSettings(): Settings {
       if (s.background && s.background in BACKGROUNDS) base.background = s.background;
       if (typeof s.points === 'boolean') base.points = s.points;
       if (typeof s.frames === 'boolean') base.frames = s.frames;
+      if (s.kind && s.kind in KINDS) base.kind = s.kind;
     }
   } catch {
     // sem localStorage (janela anônima, bloqueado): fica no padrão
@@ -126,6 +164,14 @@ section.sprite .meta { color: var(--dim); margin-bottom: 10px; }
 .tileset { margin-top: 12px; }
 .tileset canvas { image-rendering: pixelated; border: 1px solid var(--line); }
 .empty { color: var(--dim); margin-top: 40px; }
+.kind { margin: 28px 0 0; padding-bottom: 4px; border-bottom: 1px solid var(--line); color: var(--accent); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+section.sprite h3 { margin: 18px 0 2px; font-size: 16px; }
+section.sprite h4 { margin: 10px 0 6px; font-size: 13px; font-weight: normal; color: var(--dim); }
+.piece { background: var(--panel); border: 1px solid var(--line); padding: 6px; }
+.piece .variants { display: flex; gap: 4px; }
+.piece figure { margin: 0; text-align: center; font-size: 10px; color: var(--dim); }
+.piece canvas { display: block; image-rendering: pixelated; }
+.piece .name { margin-top: 4px; }
 `;
 
 interface Card {
@@ -178,6 +224,39 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLEl
   return node;
 }
 
+/**
+ * Arquivo de peças: grupos pelos pontos do nome da tag (título por primeiro pedaço, subtítulo pelo segundo) e, em cada
+ * peça, as variantes paradas lado a lado, com o número do quadro do Aseprite.
+ */
+function pieceSection(sprite: Sprite, img: HTMLImageElement, entries: GalleryEntry[], s: Settings): HTMLElement {
+  const variants = entries.reduce((n, e) => n + e.frames.length, 0);
+  const section = el('section', { className: 'sprite' },
+    el('h2', { textContent: sprite.name }),
+    el('div', { className: 'meta', textContent: `${sprite.width}x${sprite.height} px, ${entries.length} peças, ${variants} variantes` }),
+  );
+  let top: string | null = null;
+  for (const group of pieceGroups(entries)) {
+    const [first = '', second] = group.path;
+    if (first !== top) {
+      if (first) section.append(el('h3', { textContent: first }));
+      top = first;
+    }
+    if (second) section.append(el('h4', { textContent: second }));
+    const box = el('div', { className: 'cards' });
+    for (const { label, entry } of group.entries) {
+      const row = el('div', { className: 'variants' });
+      for (const f of entry.frames) {
+        const c = el('canvas', { width: sprite.width * s.zoom, height: sprite.height * s.zoom });
+        drawFrame(c.getContext('2d')!, sprite, img, f, s.zoom, s);
+        row.append(el('figure', {}, c, String(f + 1)));
+      }
+      box.append(el('div', { className: 'piece', title: entry.name }, row, el('div', { className: 'name', textContent: label })));
+    }
+    section.append(box);
+  }
+  return section;
+}
+
 function loadImage(url: string): Promise<HTMLImageElement> {
   const img = new Image();
   img.src = url;
@@ -196,7 +275,9 @@ export async function startGallery(): Promise<void> {
   let renders = 0;
 
   const count = el('span', { className: 'count' });
-  const search = el('input', { type: 'search', placeholder: 'filtrar animação', value: settings.filter });
+  const search = el('input', { type: 'search', placeholder: 'filtrar pelo nome', value: settings.filter });
+  const kind = el('select');
+  for (const k of Object.keys(KINDS)) kind.append(el('option', { value: k, textContent: k, selected: k === settings.kind }));
   const zoom = el('select');
   for (const z of [1, 2, 3, 4, 6, 8, 12]) zoom.append(el('option', { value: String(z), textContent: `${z}x`, selected: z === settings.zoom }));
   const background = el('select');
@@ -210,6 +291,7 @@ export async function startGallery(): Promise<void> {
       el('h1', { textContent: 'ase-live' }),
       count,
       el('label', {}, 'filtro', search),
+      el('label', {}, 'mostrar', kind),
       el('label', {}, 'zoom', zoom),
       el('label', {}, 'fundo', background),
       el('label', {}, points, 'pontos'),
@@ -221,7 +303,10 @@ export async function startGallery(): Promise<void> {
   const render = async (all: Record<string, Sprite>): Promise<void> => {
     latest = all;
     const run = ++renders;
-    const list = Object.values(all).sort((a, b) => a.name.localeCompare(b.name));
+    // Animações primeiro, depois os arquivos de peças; cada lado em ordem de nome.
+    const list = Object.values(all)
+      .filter((s) => settings.kind === 'tudo' || (settings.kind === 'peças') === isPieceSheet(s))
+      .sort((a, b) => +isPieceSheet(a) - +isPieceSheet(b) || a.name.localeCompare(b.name));
     const filter = settings.filter.trim().toLowerCase();
     const images = new Map(await Promise.all(list.map(async (s) => [s.name, await loadImage(s.image)] as const)));
     const tilesetImages = new Map(await Promise.all(
@@ -235,10 +320,22 @@ export async function startGallery(): Promise<void> {
 
     const fresh: Card[] = [];
     let shownEntries = 0;
+    let shownPieces = 0;
+    let lastKind: boolean | null = null;
     for (const sprite of list) {
       const img = images.get(sprite.name)!;
       const entries = galleryEntries(sprite).filter((e) => !filter || e.name.toLowerCase().includes(filter));
       if (filter && entries.length === 0) continue;
+      const pieces = isPieceSheet(sprite);
+      if (pieces !== lastKind) {
+        nodes.push(el('h2', { className: 'kind', textContent: pieces ? 'Peças' : 'Animações' }));
+        lastKind = pieces;
+      }
+      if (pieces) {
+        shownPieces += entries.length;
+        nodes.push(pieceSection(sprite, img, entries, settings));
+        continue;
+      }
       shownEntries += entries.length;
       const pointNames = Object.keys(sprite.points);
       const section = el('section', { className: 'sprite' },
@@ -293,7 +390,7 @@ export async function startGallery(): Promise<void> {
       });
       nodes.push(section);
     }
-    count.textContent = `${list.length} ${list.length === 1 ? 'sprite' : 'sprites'}, ${shownEntries} animações`;
+    count.textContent = `${list.length} ${list.length === 1 ? 'arquivo' : 'arquivos'}, ${shownEntries} animações, ${shownPieces} peças`;
     main.replaceChildren(...nodes);
     cards = fresh;
   };
@@ -307,6 +404,7 @@ export async function startGallery(): Promise<void> {
   background.addEventListener('change', () => { settings.background = background.value as Background; rerender(); });
   points.addEventListener('change', () => { settings.points = points.checked; rerender(); });
   frames.addEventListener('change', () => { settings.frames = frames.checked; rerender(); });
+  kind.addEventListener('change', () => { settings.kind = kind.value as Kind; rerender(); });
 
   // Tag que toca N vezes: para no último quadro e recomeça depois de uma pausa.
   const PAUSE = 700;
